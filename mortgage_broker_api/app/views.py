@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Chatbot,Ticket,Message
-from .serializer import UserRegistrationSerializer,UserLoginSerializer,ChatbotSerializer,TicketSerializer,MessageSerializer,UserMessageSerializer
+from .serializer import UserRegistrationSerializer,ChatbotSerializer,TicketSerializer,MessageSerializer,UserMessageSerializer
 from django.contrib.auth.models import User
 from rest_framework import status
 from .langchains import generate_response, OpenAIFunction
@@ -35,19 +35,19 @@ class UserRegistrationAPIView(APIView):
         return Response(serializer.errors, status=400)
     
 
-class UserLoginAPIView(APIView):
-    def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(username=username, password=password)
-            if user:
-                login(request, user)
-                return Response({'message': 'Login successful'})
-            else:
-                return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+# class UserLoginAPIView(APIView):
+#     def post(self, request):
+#         serializer = UserLoginSerializer(data=request.data)
+#         if serializer.is_valid():
+#             username = serializer.validated_data['username']
+#             password = serializer.validated_data['password']
+#             user = authenticate(username=username, password=password)
+#             if user:
+#                 login(request, user)
+#                 return Response({'message': 'Login successful'})
+#             else:
+#                 return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 
 class ChatAPI(APIView):
@@ -154,10 +154,22 @@ class TicketDetailAPIView(APIView):
 
 
 class MessageListAPIView(APIView):
+    # def get(self, request):
+    #     messages = Message.objects.all()
+    #     serializer = MessageSerializer(messages, many=True)
+    #     return Response(serializer.data)
+
     def get(self, request):
-        messages = Message.objects.all()
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
+        tickets = Ticket.objects.all()
+        ticket_serializer = TicketSerializer(tickets, many=True)
+
+        messages = Message.objects.filter(ticket__in=tickets)
+        message_serializer = UserMessageSerializer(messages, many=True)
+
+        return Response({
+            'tickets': ticket_serializer.data,
+            'messages': message_serializer.data,
+        }, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = MessageSerializer(data=request.data)
@@ -167,18 +179,22 @@ class MessageListAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MessageDetailAPIView(APIView):
-    def get_object(self, ticket_id):
-        try:
-            return Message.objects.get(pk=ticket_id)
-        except Message.DoesNotExist:
-            return None
+   
 
     def get(self, request, ticket_id):
-        message = self.get_object(ticket_id)
-        if message is not None:
-            serializer = MessageSerializer(message)
-            return Response(serializer.data)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            ticket = Ticket.objects.get(id=ticket_id)
+        except Ticket.DoesNotExist:
+            return Response({'detail': 'Ticket not found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        ticket_serializer = TicketSerializer(ticket)
+        messages = Message.objects.filter(ticket=ticket)
+        message_serializer = UserMessageSerializer(messages, many=True)
+        
+        return Response({
+            'ticket': ticket_serializer.data,
+            'messages': message_serializer.data,
+        }, status=status.HTTP_200_OK)
     
     def post(self, request, ticket_id):
         ticket = get_object_or_404(Ticket, id=ticket_id)
@@ -201,29 +217,38 @@ class MessageDetailAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, ticket_id):
-        message = self.get_object(ticket_id)
-        if message is not None:
-            serializer = MessageSerializer(message, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            message = Message.objects.get(id=ticket_id)
+        except Message.DoesNotExist:
+            return Response({'detail': 'Message not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserMessageSerializer(message, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, ticket_id):
-        message = self.get_object(ticket_id)
-        if message is not None:
-            message.delete()
-            return Response(data='Message deleted successfully !!!',status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_404_NOT_FOUND)  
+        try:
+            ticket = Message.objects.get(id=ticket_id)
+            ticket.delete()
+            return Response({'message': 'Message deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        except Message.DoesNotExist:
+            return Response({'error': 'Message not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class UserDetailView(APIView):
-    def get(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-            messages = Message.objects.filter(ticket__client=user)
-            serializer = UserMessageSerializer(messages, many=True)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)                     
+
+    permission_classes = [IsAuthenticated,IsTicketOwner]
+
+    def get(self, request):
+        tickets = Ticket.objects.filter(client=request.user)
+        ticket_serializer = TicketSerializer(tickets, many=True)
+
+        messages = Message.objects.filter(ticket__in=tickets)
+        message_serializer = UserMessageSerializer(messages, many=True)
+
+        return Response({
+            'tickets': ticket_serializer.data,
+            'messages': message_serializer.data,
+        }, status=status.HTTP_200_OK)

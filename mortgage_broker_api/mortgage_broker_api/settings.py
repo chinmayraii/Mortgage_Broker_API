@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'app',
-    'rest_framework'
+    'rest_framework',
+    'social_django',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +78,8 @@ WSGI_APPLICATION = "mortgage_broker_api.wsgi.application"
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
 }
 
@@ -134,11 +138,39 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'app.CustomUser'
 
+AUTHENTICATION_BACKENDS = (
+   
+    'social_core.backends.google.GoogleOAuth2',
+    # drf-social-oauth2
+    'drf_social_oauth2.backends.DjangoOAuth2',
+    # Django
+    'django.contrib.auth.backends.ModelBackend',
+)
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '*************'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '**********'
+
+
+
+
+
+
 # CSRF_COOKIE_SECURE = False
 # CSRF_COOKIE_SAMESITE = 'Lax'
 # CSRF_COOKIE_HTTPONLY = False
 # CSRF_USE_SESSIONS = True
 # CSRF_COOKIE_NAME = 'csrftoken' 
+
+
+# in your settings.py file.
+from oauth2_provider import settings as oauth2_settings
+
+# expires in 6 months
+oauth2_settings.DEFAULTS['ACCESS_TOKEN_EXPIRE_SECONDS'] = 1.577e7
 
 
 SIMPLE_JWT = {

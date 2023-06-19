@@ -22,15 +22,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
+# class UserLoginSerializer(serializers.Serializer):
+#     username = serializers.CharField()
+#     password = serializers.CharField()
 
-    def validate(self, attrs):
-        user = authenticate(username=attrs['username'], password=attrs['password'])
-        if not user:
-            raise serializers.ValidationError('Invalid username or password')
-        return attrs
+#     def validate(self, attrs):
+#         user = authenticate(username=attrs['username'], password=attrs['password'])
+#         if not user:
+#             raise serializers.ValidationError('Invalid username or password')
+#         return attrs
 
 class ChatbotSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,7 +52,15 @@ class UserMessageSerializer(serializers.ModelSerializer):
     ticket_subject = serializers.CharField(source='ticket.subject')
     status = serializers.CharField(source='get_status_display')
 
+
     class Meta:
         model = Message
         fields = ['ticket','ticket_subject', 'status', 'content', 'created_at'] 
+        read_only_fields = ['id', 'ticket']
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.content = validated_data.get('content', instance.content)
+        instance.save()
+        return instance
 
