@@ -44,7 +44,7 @@ db = SQLDatabase.from_uri(
     f"postgresql+psycopg2://postgres:{os.getenv('DBPASS')}@localhost:5432/{os.getenv('DATABASE')}",
 )
 
-OpenAI.api_key=os.getenv('OPENAI_API_KEY')
+openai.api_key=os.getenv('OPENAI_API_KEY')
 
 llm = OpenAI(temperature=0, verbose=True)
 

@@ -1,96 +1,68 @@
 from django.db import models
-from django.contrib.auth.models import User
-from django.contrib.auth.models import AbstractUser,Group
-from django.conf import settings
-from django.utils import timezone
 
 
-class CustomUser(AbstractUser):
-    phone_number = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
+PROPERTY_TYPE = (
+    ('House', 'House'),
+    ('Flat', 'Flat'),
+    ('Villa', 'Villa'),
+    ('Appartment', 'Appartment'),
+    ('Condo', 'Condo'),
+    ('Commercial', 'Commercial'),
 
-class Chatbot(models.Model):
-    user_details = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
-    user_input = models.TextField()
-    bot_response = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+)
 
-    def __str__(self):
-        return self.user_details.username +" "+self.user_input +" "+self.bot_response
-    
+PROPERTY = (
+    ('New', 'New'),
+    ('Secondhand', 'Secondhand'),
 
-class Ticket(models.Model):
-    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    subject = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
+)
 
-    def __str__(self):
-        return self.client.username+" "+self.subject
-    
-    
 
-STATUS_CHOICES = (
-    ('Enquiry', 'Enquiry'),
-    ('Application', 'In Application'),
-    ('Completion stage', 'Completion stage'),
-)    
+COUNTRY = (
+    ('India', 'India'),
+    ('Anguilla', 'Anguilla'),
+    ('Aruba', 'Miss'),
+    ('Australia', 'Mx'),
+    ('Austria', 'Dr'),
+    ('Bahamas', 'Ms'),
+    ('Barbados', 'Ind.'),
+    ('Belgium', 'Msr'),
+    ('Bonaire', 'Mre'),
+    ('Bulgaria', 'M'),
+    ('Cape Verde', 'Pr'),
+    ('Canada', 'M'),
+    ('China', 'M'),
+    ('Corsica', 'M'),
+    ('Costa Rica', 'M')
+    ('Cyprus', 'M'),
+    ('Dominican Republic', 'M'),
+    ('Bulgaria', 'M'),
+    ('Bulgaria', 'M'),
 
-class Message(models.Model):
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.content
-    
-
-class Property(models.Model):
-    property=models.CharField(max_length=100)
-
-    def __str__(self) -> str:
-        return self.property
+)  
 
 
 class Country(models.Model):
     country_name=models.CharField(max_length=50)
-    def __str__(self) -> str:
-        return self.country_name
 
-class PropertyType(models.Model):
-    type=models.CharField(max_length=100)
-    def __str__(self) -> str:
-        return self.type
-
-class SituationSearch(models.Model):
+class SituationSearch(models.model):
     search=models.CharField(max_length=100)
-    def __str__(self) -> str:
-        return self.search
-
     
 class SituationExisting(models.Model):
     existing=models.CharField(max_length=100)
-    def __str__(self) -> str:
-        return self.existing
 
 
 class CurrentCircumstances(models.Model):
-    hear_my_services=models.CharField(max_length=100 ,blank=True, null=True)
+    hear_my_services=models.CharField(max_length=100)
     situation_regarding_search =models.ForeignKey(SituationSearch, on_delete=models.CASCADE)  
     situation_regarding_existing =models.ForeignKey(SituationExisting, on_delete=models.CASCADE)
     location_country=models.ForeignKey(Country, on_delete=models.CASCADE)
     location_town=models.CharField(max_length=50)  
     postal_address=models.TextField(blank=True, null=True)
     web_link=models.CharField(max_length=50,blank=True, null=True)
-    property_type=models.ForeignKey(PropertyType, on_delete=models.CASCADE)
-    property=models.ForeignKey(Property, on_delete=models.CASCADE)
-    checkbox = models.BooleanField(default=False)
-    def __str__(self) -> str:
-        return self.hear_my_services
+    property_type=models.CharField(max_length=50, choices=PROPERTY_TYPE)
+    property=models.CharField(max_length=50, choices=PROPERTY,blank=True, null=True)
+
 
 
 
@@ -102,8 +74,6 @@ OPTION = (
 
 class SourceOfFunds(models.Model):
     source_of_funds=models.CharField(max_length=50)
-    def __str__(self) -> str:
-        return self.source_of_funds
 
 
 class MortgageRequirements(models.Model):
@@ -115,10 +85,9 @@ class MortgageRequirements(models.Model):
     source=models.ForeignKey(SourceOfFunds,on_delete=models.CASCADE)
     rent_new_property=models.CharField(max_length=50,choices=OPTION ,blank=True, null=True)
     improvements_in_property=models.CharField(max_length=50,choices=OPTION ,blank=True, null=True)
-    checkbox = models.BooleanField(default=False)
 
-    def __str__(self) -> str:
-        return self.purchase_price
+
+
 
 TITLE = (
     ('Mr', 'Mr'),
@@ -136,8 +105,6 @@ TITLE = (
 
 class Apps(models.Model):
     apps=models.CharField(max_length=50)
-    def __str__(self) -> str:
-        return self.apps
 
 class Applicant(models.Model):
     title=models.CharField(max_length=50,choices=TITLE)
@@ -156,16 +123,10 @@ class Applicant(models.Model):
     apps=models.ForeignKey(Apps, on_delete=models.CASCADE)
     email_address=models.CharField(max_length=50, unique=True)
     skype_address=models.CharField(max_length=50,blank=True, null=True)
-    checkbox = models.BooleanField(default=False)
-
-    def __str__(self) -> str:
-        return self.title +" "+self.first_name
 
 
-class Status(models.Model):
+class Status(models.model):
     status=models.CharField(max_length=50)
-    def __str__(self) -> str:
-        return self.status
 
 class Employment(models.Model):
     status=models.ForeignKey(Status, on_delete=models.CASCADE)
@@ -179,53 +140,23 @@ class Employment(models.Model):
     income_after_tax_and_pension_ANNUM=  models.IntegerField(blank=True, null=True)
     income_after_tax_and_pension_MONTH=  models.IntegerField(blank=True, null=True)
     bonus=  models.IntegerField(blank=True, null=True)
-    checkbox = models.BooleanField(default=False)
-
-    def __str__(self) -> str:
-        return self.employer_name
 
 class Loans(models.Model):
     school_fees=models.CharField(max_length=50,choices=OPTION)
     maintenance =models.CharField(max_length=50,choices=OPTION)    
     credit_card=models.CharField(max_length=50,choices=OPTION)    
-    other_loans=models.CharField(max_length=50,choices=OPTION) 
-    checkbox = models.BooleanField(default=False) 
-
-    def __str__(self) -> str:
-        return self.school_fees 
+    other_loans=models.CharField(max_length=50,choices=OPTION)   
 
 
 class AdditionalAssistance(models.Model):
     assistance=models.CharField(max_length=100)
-    def __str__(self) -> str:
-        return self.assistance
 
 class Assets(models.Model):
     existing_property=models.TextField(blank=True, null=True)  
     other_savings=models.TextField(blank=True, null=True)
     bad_debts=models.CharField(max_length=50,choices=OPTION,blank=True, null=True) 
     assistance=models.ForeignKey(AdditionalAssistance, on_delete=models.CASCADE,blank=True, null=True)
-    checkbox = models.BooleanField(default=False)
-
-    def __str__(self) -> str:
-        return self.existing_property
 
 
-class AdditionalApplicnats(models.Model):
-    applicant_form=models.CharField(max_length=50,choices=OPTION) 
-    checkbox = models.BooleanField(default=False)  
-
-    def __str__(self) -> str:
-        return self.applicant_form     
-
-
-
-
-
-
-
-    
-
-
-
-
+class AdditionalApplicnats(models.model):
+    applicant_form=models.CharField(max_length=50,choices=OPTION)   

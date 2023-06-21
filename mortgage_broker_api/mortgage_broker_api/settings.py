@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'social_django',
     'oauth2_provider',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -80,7 +81,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ],
+    ]
+    # ,
+    
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework.authentication.TokenAuthentication',
+    # )
 }
 
 
@@ -139,31 +145,34 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'app.CustomUser'
 
 AUTHENTICATION_BACKENDS = (
-   
     'social_core.backends.google.GoogleOAuth2',
-    # drf-social-oauth2
-    'drf_social_oauth2.backends.DjangoOAuth2',
-    # Django
     'django.contrib.auth.backends.ModelBackend',
 )
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '216728654138-rjid3d1grco4nie8muu66eku5h6ptjcg.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email']
+SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = [
+    ('email', 'email'),
+    ('name', 'name'),
+    ('picture', 'picture'),
 ]
-
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '*************'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '**********'
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 
 
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+#     'https://www.googleapis.com/auth/userinfo.email',
+#     'https://www.googleapis.com/auth/userinfo.profile',
+# ]
+
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '216728654138-rjid3d1grco4nie8muu66eku5h6ptjcg.apps.googleusercontent.com'
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
 
 
 
-# CSRF_COOKIE_SECURE = False
-# CSRF_COOKIE_SAMESITE = 'Lax'
-# CSRF_COOKIE_HTTPONLY = False
-# CSRF_USE_SESSIONS = True
-# CSRF_COOKIE_NAME = 'csrftoken' 
+
+
 
 
 # in your settings.py file.

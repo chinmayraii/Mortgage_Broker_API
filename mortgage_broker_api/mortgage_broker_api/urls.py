@@ -16,18 +16,36 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from app.viewset import *
+from rest_framework.routers import DefaultRouter
+from app import views
+
+
+router= DefaultRouter()
+router.register(r'property', PropertyViewSet , basename='property')
+router.register(r'country', CountryViewSet, basename='country')
+router.register(r'propertytype', PropertyTypeViewSet, basename='Propertytype')
+router.register(r'situationsearch', SituationSearchViewSet, basename='situationsearch')
+router.register(r'situationexisting', SituationExistingViewSet, basename='situationexisting')
+router.register(r'currentcircumstances', CurrentCircumstancesViewSet, basename='currentcircumstances')
+router.register(r'sourceoffunds', SourceOfFundsViewSet, basename='sourceoffunds')
+router.register(r'mortgagerequirements', MortgageRequirementsViewSet, basename='mortgagerequirements')
+router.register(r'apps', AppsViewSet, basename='apps')
+router.register(r'applicant', ApplicantViewSet, basename='applicant')
+router.register(r'status', StatusViewSet, basename='status')
+router.register(r'employment', EmploymentViewSet, basename='employment')
+router.register(r'loans', LoansViewSet, basename='loans')
+router.register(r'additionalassistance', AdditionalAssistanceViewSet, basename='additionalassistance')
+router.register(r'assets', AssetsViewSet, basename='assets')
+router.register(r'additionalapplicants', AdditionalApplicnatsViewSet, basename='additionalapplicants')
+
 
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('',include('app.urls')),
-    path('api/auth/', include('rest_framework.urls')),
-    path('auth/', include('drf_social_oauth2.urls', namespace='drf')),
-    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('formapi/', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls')),
+    path('auth/', include('social_django.urls', namespace='social')),
 ]

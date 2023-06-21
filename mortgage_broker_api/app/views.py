@@ -21,6 +21,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 # from .conversation import save_conversation
 import openai
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from social_django.utils import psa
+
+
 
 
 User = get_user_model()
@@ -50,47 +55,63 @@ class UserRegistrationAPIView(APIView):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 
-class ChatAPI(APIView):
+class ChatListAPI(APIView):
     
-        # permission_classes = [IsAuthenticated]
-
+        permission_classes = [IsAuthenticated]
+        
         def get(self, request):
-            user = request.user.id
-            chat_data = Chatbot.objects.filter(user_details=user)
+
+            chat_data = Chatbot.objects.filter(user_details=request.user)
             serializer = ChatbotSerializer(chat_data, many=True)
             return Response(serializer.data) 
 
         def post(self, request):
             try:
                 user_input = request.data.get('message')
-                user = request.user.id
-                
                 response=generate_response(user_input)
-                message=Chatbot.objects.create(user_details=user,user_input=user_input,bot_response=response)
+                message=Chatbot.objects.create(user_details=request.user,user_input=user_input,bot_response=response)
                 message.save()
-                # save_conversation(user_id,user_input,response)
                 serializer = ChatbotSerializer(message)
                 return Response(serializer.data)
             except:
                 prompt = f"You are  <expert mortgage advisor>,<mortgage advisor for specific company> <inteligent> human current question:{user_input}\n  Now if human current question: {user_input} for something then ask human for that otherwise give best answer as a mortgage advisor "
                 response = OpenAIFunction(prompt)
-                message=Chatbot.objects.create(user_details=user,user_input=user_input,bot_response=response)
+                message=Chatbot.objects.create(user_details=request.user,user_input=user_input,bot_response=response)
                 message.save()
-                # save_conversation(user_id,user_input,response)
                 serializer = ChatbotSerializer(message)
                 return Response(serializer.data)
                 
-            # except Exception as e:
-            #     print(e)
-            #     return Response(status=status.HTTP_400_BAD_REQUEST)
+class ChatDetailAPI(APIView):
+        permission_classes = [IsAuthenticated]
 
-        # def put(self, request):
-        #     request.session['user_id'] = str(uuid.uuid4())  # Generate a new user ID
-        #     return Response({'message': 'User changed successfully'}, status=200) 
+        def get_object(self, chat_id):
+            try:
+                return Chatbot.objects.get(id=chat_id, user_details=self.request.user)
+            except :
+                return None
+            
+        def get(self, request, chat_id=None):
+            if chat_id is not None:
+                chat_data = self.get_object(chat_id)
+                serializer = ChatbotSerializer(chat_data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            
+            tickets = Ticket.objects.filter(client=request.user)
+            serializer = TicketSerializer(tickets, many=True)
+            return Response( status=status.HTTP_200_OK)
 
-        def delete(self, request,user_id):
-            Chatbot.objects.filter(user_id=user_id).delete()
-            return Response({'message': 'User data deleted successfully'}, status=204)  
+
+        # def put(self, request, chat_id):
+        #     ticket = Ticket.objects.get(id=chat_id, user_details=request.user)
+        #     serializer = TicketSerializer(ticket, data=data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         return Response(serializer.data, status=status.HTTP_200_OK)
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        def delete(self, request,chat_id):
+            Chatbot.objects.filter(id=chat_id).delete()
+            return Response({'message': 'Chat deleted successfully'}, status=204)  
 
 
 
@@ -252,3 +273,23 @@ class UserDetailView(APIView):
             'tickets': ticket_serializer.data,
             'messages': message_serializer.data,
         }, status=status.HTTP_200_OK)
+    
+
+
+from django.views import View
+from django.http import JsonResponse
+from social_django.utils import psa
+
+
+class GoogleLoginAPIView(View):
+    @psa()
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.POST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        # Perform the login logic
+        # ...
+        return JsonResponse({'detail': 'Logged in successfully'})  
+
+
+
