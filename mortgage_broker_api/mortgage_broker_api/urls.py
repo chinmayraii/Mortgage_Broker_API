@@ -46,6 +46,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('',include('app.urls')),
     path('formapi/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls')),
-    path('auth/', include('social_django.urls', namespace='social')),
+    path('auth/', include('drf_social_oauth2.urls', namespace='drf'))
 ]

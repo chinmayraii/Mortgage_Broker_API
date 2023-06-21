@@ -3,6 +3,7 @@ from langchain.prompts.prompt import PromptTemplate
 from langchain import OpenAI, SQLDatabase, SQLDatabaseChain
 import os
 import openai
+import psycopg2
 
 
 
@@ -39,10 +40,25 @@ PROMPT = PromptTemplate(
 )
 
 
-# Setup database
+host='mortgagedatabase.cyxgntsmiing.eu-north-1.rds.amazonaws.com',
+port=5432,
+user='postgres',
+password='postgres',
+database='mortgage_chatbot_db'
+
+
+
 db = SQLDatabase.from_uri(
-    f"postgresql+psycopg2://postgres:{os.getenv('DBPASS')}@localhost:5432/{os.getenv('DATABASE')}",
+    f"postgresql+psycopg2://postgres:postgres@mortgagedatabase.cyxgntsmiing.eu-north-1.rds.amazonaws.com/mortgage_chatbot_db"
 )
+
+
+# Setup database
+# db = SQLDatabase.from_uri(
+#     f"postgresql+psycopg2://postgres:{os.getenv('DBPASS')}@localhost:5432/{os.getenv('DATABASE')}",
+# )
+
+
 
 openai.api_key=os.getenv('OPENAI_API_KEY')
 
