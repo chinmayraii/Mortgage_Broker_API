@@ -60,7 +60,9 @@ db = SQLDatabase.from_uri(
 
 
 
-openai.api_key=os.getenv('OPENAI_API_KEY')
+# openai.api_key=os.getenv('OPENAI_API_KEY')
+os.environ['OPENAI_API_KEY']='**'
+
 
 llm = OpenAI(temperature=0, verbose=True)
 

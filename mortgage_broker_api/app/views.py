@@ -74,10 +74,12 @@ class ChatListAPI(APIView):
                 serializer = ChatbotSerializer(message)
                 return Response(serializer.data)
             except:
+                user_input = request.data.get('message')
                 prompt = f"You are  <expert mortgage advisor>,<mortgage advisor for specific company> <inteligent> human current question:{user_input}\n  Now if human current question: {user_input} for something then ask human for that otherwise give best answer as a mortgage advisor "
                 response = OpenAIFunction(prompt)
-                message=Chatbot.objects.create(user_details=request.user,user_input=user_input,bot_response=response)
-                message.save()
+                message=Chatbot.objects.create(user_details=request.user,user_input=user_input,bot_response=response) 
+                # message.save()
+                print(message)
                 serializer = ChatbotSerializer(message)
                 return Response(serializer.data)
                 
